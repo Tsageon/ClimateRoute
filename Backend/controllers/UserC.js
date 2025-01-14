@@ -9,8 +9,13 @@ require('dotenv').config();
 const API_KEY = process.env.API_KEY;
 const WEATHER_BASE_URL = process.env.WEATHER_URL;
 const FORECAST_BASE_URL = process.env.FORECAST_URL;
+const GOOGLE_PLACES_BASE_URL = process.env.GOOGLE_PLACE_URL;
+const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_P_API_KEY;
+
 console.log(process.env.WEATHER_URL); 
 console.log(process.env.FORECAST_URL);
+console.log(process.env.GOOGLE_P_API_KEY);
+console.log(process.env.GOOGLE_PLACE_URL)
 
 exports.registerUser = async (req, res) => {
     const { email, password, username } = req.body;
@@ -232,14 +237,14 @@ exports.updateUser = [
 ];
 
 exports.search = async (req, res) => {
-    const { city } = req.query;
+    const { city, radius = 5000 } = req.query;
 
     if (!city) {
         return res.status(400).json({ message: 'City name is required' });
     }
 
     try {
-        const response = await axios.get(WEATHER_BASE_URL, {
+        const weatherResponse = await axios.get(WEATHER_BASE_URL, {
             params: {
                 q: city,
                 appid: API_KEY,
@@ -247,7 +252,38 @@ exports.search = async (req, res) => {
             },
         });
 
-        res.status(200).json(response.data);
+        const weatherData = weatherResponse.data;
+        const { coord: { lat, lon }, weather } = weatherData;
+
+        const attractionsResponse = await axios.get(GOOGLE_PLACES_BASE_URL, {
+            params: {
+                location: `${lat},${lon}`,
+                radius,
+                type: 'tourist_attraction',
+                key: GOOGLE_PLACES_API_KEY,
+            },
+        });
+
+        const attractions = attractionsResponse.data.results;
+
+        const suggestions = [];
+        const mainWeather = weather[0]?.main.toLowerCase();
+
+        if (mainWeather.includes('rain')) {
+            suggestions.push('Visit indoor attractions like museums or aquariums.');
+        } else if (mainWeather.includes('clear')) {
+            suggestions.push('Perfect day for outdoor activities like visiting parks or gardens.');
+        } else if (mainWeather.includes('clouds')) {
+            suggestions.push('Great time for exploring landmarks or casual sightseeing.');
+        } else {
+            suggestions.push('Explore local attractions and adapt to the weather.');
+        }
+
+        res.status(200).json({
+            weather: weatherData,
+            attractions,
+            suggestions,
+        });
     } catch (error) {
         console.error(error.message);
         if (error.response && error.response.status === 404) {
@@ -255,7 +291,7 @@ exports.search = async (req, res) => {
         }
         res.status(500).json({ message: 'Something went wrong' });
     }
-}
+};
 
 exports.forecast = async(req,res) => {
     const { city } = req.query;

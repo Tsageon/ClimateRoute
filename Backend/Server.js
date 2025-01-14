@@ -1,5 +1,6 @@
 const express = require('express');
 const app = express();
+const cors = require('cors');
 const bodyParser = require('body-parser');
 const userRoutes = require('./routes/UserR')
 const connectDB = require('./config/database');
@@ -11,6 +12,8 @@ app.set('trust proxy', true);
 
 app.use(bodyParser.json());
 app.use(express.json());
+app.use(cors());
+
 app.use('/api',userRoutes);
 
 app.use((err, req, res, next) => {
@@ -19,7 +22,6 @@ app.use((err, req, res, next) => {
     });
 });
 
-  
 const PORT = 5000;
 app.listen(PORT, () => {
     console.log(`I am running on http://localhost:${PORT}`);
