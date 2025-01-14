@@ -23,6 +23,6 @@ router.post('/login', userController.loginUser);
 
 router.post('/logout', authMiddleware, userController.logoutUser);
 
-router.put('/edit', authMiddleware, userController.updateUser);
+router.put('/updateP', authMiddleware, userController.updateUser);
 
 module.exports = router;

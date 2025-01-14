@@ -71,9 +71,16 @@ npm install
 `http:localhost:5000/api/reset-password/:token or`
 `http://localhost:5000/api/reset-password/12345abcd`(e.g)
 
+**Put** to update your user info:
+`http://localhost:5000/api/update`
 
 ### Weather Endpoints
 
 **Get** the weather for a specific location:
-`http://localhost:5000/api/search?location=London`(e.g)
+`http://localhost:5000/api/search?location=London`(e.g Oh by the way it has some suggetsions based on weather conditions)
 
+**Get** the forecast for next couple of days:
+`http://localhost:5000/api/forecast?location=London`
+
+**Get** the forecast for the next five days:
+`http://localhost:5000/api/fivedayforecast?location=London`

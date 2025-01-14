@@ -275,8 +275,16 @@ exports.search = async (req, res) => {
             suggestions.push('Perfect day for outdoor activities like visiting parks or gardens.');
         } else if (mainWeather.includes('clouds')) {
             suggestions.push('Great time for exploring landmarks or casual sightseeing.');
-        } else {
-            suggestions.push('Explore local attractions and adapt to the weather.');
+        } 
+          else if (mainWeather.includes('snow')) {
+            suggestions.push('Snowy weather? Try winter sports or cozy indoor activities like cafes and theaters.');
+        } else if (mainWeather.includes('wind')) {
+            suggestions.push('Windy? Perfect for exploring nature trails, hiking, or visiting windmills.'); 
+        } else if (mainWeather.includes('fog')) {
+            suggestions.push('Foggy weather? A great time to visit mystical, atmospheric spots like historical sites.');
+        }
+          else {
+            suggestions.push('Explore local attractions and adapt to the weather or just chill inside.');
         }
 
         res.status(200).json({
@@ -368,7 +376,8 @@ exports.addToFavorites = [ authMiddleware, async (req, res) => {
             name,
             location,
             description,
-            imageUrl
+            imageUrl,
+            weatherSuggestion: suggestion
         });
 
         await newFavorite.save();
