@@ -290,9 +290,6 @@ exports.forecast5days = async (req, res) => {
         return res.status(400).json({ message: 'City name is required' });
     }
 
-    const API_KEY = process.env.API_KEY; 
-    const FORECAST_BASE_URL = process.env.FORECAST_BASE_URL; 
-
     try {
         const response = await axios.get(FORECAST_BASE_URL, {
             params: {
