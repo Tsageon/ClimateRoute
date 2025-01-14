@@ -1,6 +1,5 @@
 # ClimateRoute's Backend
 
-========================
 Welcome to the repo! This backend application serves as the server-side implementation for a Planner manager. It allows users to interact with a location-related data such as available attractions, restaurants, and more(**ComingSoon**).
 
 This backend is built using **Node.js**, **Express.js**, **MongoDB** and **Nodemailer** for handling date and time operations across different time zones.
@@ -84,3 +83,8 @@ npm install
 
 **Get** the forecast for the next five days:
 `http://localhost:5000/api/fivedayforecast?location=London`
+
+## License
+
+This project is licensed under the MIT License - see the
+`https://opensource.org/licenses/MIT` for details.

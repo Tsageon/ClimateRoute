@@ -182,17 +182,22 @@ exports.getUser = async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: 'User does not exist' });
         }
+
+        const favorites = await Favorite.find({ userId });
+
         res.status(200).json({
             email: user.email,
             phonenumber: user.phonenumber,
             username: user.username,
-            createdAt: user.createdAt
+            createdAt: user.createdAt,
+            favorites: favorites, 
         });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Something went wrong while fetching the user profile' });
+        res.status(500).json({ message: 'Something went wrong while fetching the user profile and favorites' });
     }
 };
+
 
 
 exports.updateUser = [
