@@ -10,6 +10,7 @@ connectDB();
 app.set('trust proxy', true);
 
 app.use(bodyParser.json());
+app.use(express.json());
 app.use('/api',userRoutes);
 
 app.use((err, req, res, next) => {

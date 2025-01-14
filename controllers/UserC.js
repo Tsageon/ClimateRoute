@@ -1,7 +1,16 @@
 const User = require('../model/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const authMiddleware = require('../middlewares/AuthM')
+const authMiddleware = require('../middlewares/AuthM');
+const axios = require('axios');
+require('dotenv').config();
+
+
+const API_KEY = process.env.API_KEY;
+const WEATHER_BASE_URL = process.env.WEATHER_URL;
+const FORECAST_BASE_URL = process.env.FORECAST_URL;
+console.log(process.env.WEATHER_URL); 
+console.log(process.env.FORECAST_URL);
 
 exports.registerUser = async (req, res) => {
     const { email, password, username } = req.body;
@@ -27,7 +36,7 @@ exports.registerUser = async (req, res) => {
 
         res.status(201).json({
             message: 'Userinfo saved successfully',
-            user: { email: newUser.email, username: newUser.username,  phonenumber: newUser.phonenumber }
+            user: { email: newUser.email, username: newUser.username, phonenumber: newUser.phonenumber }
         })
     } catch (error) {
         console.error(error);
@@ -62,7 +71,7 @@ exports.loginUser = async (req, res) => {
             message: 'Login successful',
             token
         });
-        console.log(user.email,user.password,user.role)
+        console.log(user.email, user.password)
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Something went wrong while logging in user' });
@@ -82,7 +91,7 @@ exports.logoutUser = (req, res) => {
                 return res.status(401).json({ message: 'Invalid token' });
             }
 
-            const userId = decoded.userId; 
+            const userId = decoded.userId;
             console.log(`User with ID: ${userId} logged out`);
 
             res.status(200).json({ message: 'Logout successful' });
@@ -120,6 +129,43 @@ exports.resetPassword = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Something went wrong while resetting the password' });
+    }
+};
+
+exports.forgotPassword = async (req, res) => {
+    const { email } = req.body;
+
+    try {
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found with the provided email' });
+        }
+
+        const resetToken = crypto.randomBytes(32).toString('hex');
+
+        const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+        user.resetPasswordToken = hashedToken;
+        user.resetPasswordExpires = Date.now() + 3600000;
+
+        await user.save();
+
+        const resetURL = `${req.protocol}://${req.get('host')}/reset-password/${resetToken}`;
+
+        const mailOptions = {
+            from: process.env.EMAIL_FROM,
+            to: user.email,
+            subject: 'Password Reset Request',
+            text: `You requested a password reset. Click the link below to reset your password:\n\n${resetURL}\n\nIf you didn't request this, please ignore this email.`,
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        res.status(200).json({
+            message: 'Password reset email sent successfully. Please check your email.',
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Something went wrong while processing the request' });
     }
 };
 
@@ -184,3 +230,59 @@ exports.updateUser = [
         }
     }
 ];
+
+console.log(process.env.API_KEY);
+
+
+
+exports.search = async (req, res) => {
+    const { city } = req.query;
+
+    if (!city) {
+        return res.status(400).json({ message: 'City name is required' });
+    }
+
+    try {
+        const response = await axios.get(WEATHER_BASE_URL, {
+            params: {
+                q: city,
+                appid: API_KEY,
+                units: 'metric',
+            },
+        });
+
+        res.status(200).json(response.data);
+    } catch (error) {
+        console.error(error.message);
+        if (error.response && error.response.status === 404) {
+            return res.status(404).json({ message: 'City not found' });
+        }
+        res.status(500).json({ message: 'Something went wrong' });
+    }
+}
+
+exports.forecast = async(req,res) => {
+    const { city } = req.query;
+
+    if (!city) {
+        return res.status(400).json({ message: 'City name is required' });
+    }
+
+    try {
+        const response = await axios.get(FORECAST_BASE_URL, {
+            params: {
+                q: city,
+                appid: API_KEY,
+                units: 'metric',
+            },
+        });
+
+        res.status(200).json(response.data);
+    } catch (error) {
+        console.error(error.message);
+        if (error.response && error.response.status === 404) {
+            return res.status(404).json({ message: 'City not found' });
+        }
+        res.status(500).json({ message: 'Something went wrong' });
+    } 
+}
