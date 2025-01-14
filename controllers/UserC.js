@@ -2,9 +2,9 @@ const User = require('../model/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const authMiddleware = require('../middlewares/AuthM');
+const Favorite = require('../model/Favorites');
 const axios = require('axios');
 require('dotenv').config();
-
 
 const API_KEY = process.env.API_KEY;
 const WEATHER_BASE_URL = process.env.WEATHER_URL;
@@ -180,7 +180,7 @@ exports.getUser = async (req, res) => {
         res.status(200).json({
             email: user.email,
             phonenumber: user.phonenumber,
-            fullname: user.fullname,
+            username: user.username,
             createdAt: user.createdAt
         });
     } catch (error) {
@@ -230,10 +230,6 @@ exports.updateUser = [
         }
     }
 ];
-
-console.log(process.env.API_KEY);
-
-
 
 exports.search = async (req, res) => {
     const { city } = req.query;
@@ -286,3 +282,67 @@ exports.forecast = async(req,res) => {
         res.status(500).json({ message: 'Something went wrong' });
     } 
 }
+
+exports.forecast5days = async (req, res) => {
+    const { city } = req.query;
+
+    if (!city) {
+        return res.status(400).json({ message: 'City name is required' });
+    }
+
+    const API_KEY = process.env.API_KEY; 
+    const FORECAST_BASE_URL = process.env.FORECAST_BASE_URL; 
+
+    try {
+        const response = await axios.get(FORECAST_BASE_URL, {
+            params: {
+                q: city,
+                appid: API_KEY,
+                units: 'metric',
+            },
+        });
+
+        const { list, city: cityInfo } = response.data;
+        res.status(200).json({
+            city: cityInfo.name,
+            country: cityInfo.country,
+            forecast: list,
+        });
+    } catch (error) {
+        console.error(error.message);
+
+        if (error.response && error.response.status === 404) {
+            return res.status(404).json({ message: 'City not found' });
+        }
+
+        res.status(500).json({ message: 'Something went wrong' });
+    }
+};
+
+exports.addToFavorites = [ authMiddleware, async (req, res) => {
+    const userId = req.userId;
+    const { itemType, itemId, name, location, description, imageUrl } = req.body;
+
+    if (!itemType || !itemId || !name || !location) {
+        return res.status(400).json({ message: 'Item details are required' });
+    }
+
+    try {
+        const newFavorite = new Favorite({
+            userId,
+            itemType,
+            itemId,
+            name,
+            location,
+            description,
+            imageUrl
+        });
+
+        await newFavorite.save();
+
+        res.status(200).json({ message: 'Favorite added successfully' });
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({ message: 'Something went wrong while adding to favorites' });
+    }
+}];

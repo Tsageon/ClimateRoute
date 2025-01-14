@@ -9,6 +9,12 @@ router.get('/search', userController.search);
 
 router.get('/forecast', userController.forecast);
 
+router.get('/fivedayforecast', userController.forecast5days);
+
+router.post('/addFavorite', authMiddleware, userController.addToFavorites);
+
+router.post('/forgot-password', userController.forgotPassword);
+
 router.post('/reset-password/:token', userController.resetPassword);
 
 router.post('/register', userController.registerUser);
