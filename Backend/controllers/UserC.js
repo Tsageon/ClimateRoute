@@ -188,7 +188,7 @@ exports.getUser = async (req, res) => {
             return res.status(404).json({ message: 'User does not exist' });
         }
 
-        const favorites = await Favorite.find({ userId }).populate('itemId'); 
+        const itemId = crypto.createHash('sha256').update(`${name}${JSON.stringify(location)}`).digest('hex');
 
         const favoritesWithNameAsId = favorites.map(favorite => ({
             itemId: favorite.itemId, 
