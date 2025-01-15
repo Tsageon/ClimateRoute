@@ -242,23 +242,45 @@ exports.updateUser = [
 ];
 
 exports.search = async (req, res) => {
-    const { city, radius = 5000 } = req.query;
+    const { city, latitude, longitude, radius = 5000 } = req.query;
 
-    if (!city) {
-        return res.status(400).json({ message: 'City name is required' });
+    if (!city && (!latitude || !longitude)) {
+        return res.status(400).json({ message: 'City name or coordinates are required' });
     }
 
     try {
-        const weatherResponse = await axios.get(WEATHER_BASE_URL, {
-            params: {
-                q: city,
-                appid: API_KEY,
-                units: 'metric',
-            },
-        });
+        let lat, lon;
 
-        const weatherData = weatherResponse.data;
-        const { coord: { lat, lon }, weather } = weatherData;
+        if (city) {
+            const weatherResponse = await axios.get(WEATHER_BASE_URL, {
+                params: {
+                    q: city,
+                    appid: API_KEY,
+                    units: 'metric',
+                },
+            });
+
+            const weatherData = weatherResponse.data;
+            lat = weatherData.coord.lat;
+            lon = weatherData.coord.lon;
+
+            var weather = weatherData.weather;
+        } else {
+            lat = latitude;
+            lon = longitude;
+
+            const weatherResponse = await axios.get(WEATHER_BASE_URL, {
+                params: {
+                    lat,
+                    lon,
+                    appid: API_KEY,
+                    units: 'metric',
+                },
+            });
+
+            const weatherData = weatherResponse.data;
+            weather = weatherData.weather;
+        }
 
         const attractionsResponse = await axios.get(GOOGLE_PLACES_BASE_URL, {
             params: {
@@ -268,14 +290,14 @@ exports.search = async (req, res) => {
                 key: GOOGLE_PLACES_API_KEY,
             },
         });
-         
+
         console.log("Google Places API Request Params:", {
             location: `${lat},${lon}`,
             radius,
             type: 'tourist_attraction',
             key: GOOGLE_PLACES_API_KEY ? "API Key Present" : "No API Key",
         });
-        
+
         const attractions = attractionsResponse.data.results || [];
 
         const suggestions = [];
@@ -290,7 +312,7 @@ exports.search = async (req, res) => {
         } else if (mainWeather.includes('snow')) {
             suggestions.push('Snowy weather? Try winter sports or cozy indoor activities like cafes and theaters.');
         } else if (mainWeather.includes('wind')) {
-            suggestions.push('Windy? Perfect for exploring nature trails, hiking, or visiting windmills.'); 
+            suggestions.push('Windy? Perfect for exploring nature trails, hiking, or visiting windmills.');
         } else if (mainWeather.includes('fog')) {
             suggestions.push('Foggy weather? A great time to visit mystical, atmospheric spots like historical sites.');
         } else {
@@ -298,7 +320,7 @@ exports.search = async (req, res) => {
         }
 
         res.status(200).json({
-            weather: weatherData,
+            weather: weather,
             attractions: attractions.map(attraction => ({
                 name: attraction.name,
                 location: {
@@ -319,7 +341,7 @@ exports.search = async (req, res) => {
             });
         }
         if (error.response && error.response.status === 404) {
-            return res.status(404).json({ message: 'City not found' });
+            return res.status(404).json({ message: 'City or location not found' });
         }
         res.status(500).json({ message: 'Something went wrong' });
     }
@@ -412,3 +434,4 @@ exports.addToFavorites = [ authMiddleware, async (req, res) => {
         res.status(500).json({ message: 'Something went wrong while adding to favorites' });
     }
 }]; 
+
