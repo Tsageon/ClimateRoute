@@ -183,17 +183,25 @@ exports.getUser = async (req, res) => {
             return res.status(404).json({ message: 'User does not exist' });
         }
 
-        const favorites = await Favorite.find({ userId });
+        const favorites = await Favorite.find({ userId }).populate('itemId'); 
+
+        const favoritesWithNameAsId = favorites.map(favorite => ({
+            id: favorite.itemId.name,  
+            name: favorite.itemId.name,
+            location: favorite.itemId.location,
+            description: favorite.itemId.description,
+            imageUrl: favorite.itemId.imageUrl,
+            weatherSuggestion: favorite.weatherSuggestion
+        }));
 
         res.status(200).json({
             email: user.email,
-            phonenumber: user.phonenumber,
             username: user.username,
             createdAt: user.createdAt,
-            favorites: favorites, 
+            favorites: favoritesWithNameAsId
         });
     } catch (error) {
-        console.error(error);
+        console.error(error.message);
         res.status(500).json({ message: 'Something went wrong while fetching the user profile and favorites' });
     }
 };
@@ -408,7 +416,7 @@ exports.forecast5days = async (req, res) => {
 
 exports.addToFavorites = [ authMiddleware, async (req, res) => {
     const userId = req.userId;
-    const { itemType, itemId, name, location, description, imageUrl } = req.body;
+    const { itemType, itemId, name, location, description, imageUrl, weatherSuggestion } = req.body;
 
     if (!itemType || !itemId || !name || !location) {
         return res.status(400).json({ message: 'Item details are required' });
@@ -420,10 +428,10 @@ exports.addToFavorites = [ authMiddleware, async (req, res) => {
             itemType,
             itemId,
             name,
-            location,
+            location,   
             description,
             imageUrl,
-            weatherSuggestion: suggestion
+            weatherSuggestion 
         });
 
         await newFavorite.save();
@@ -433,5 +441,6 @@ exports.addToFavorites = [ authMiddleware, async (req, res) => {
         console.error(error.message);
         res.status(500).json({ message: 'Something went wrong while adding to favorites' });
     }
-}]; 
+}];
+
 

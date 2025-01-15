@@ -21,7 +21,10 @@ const favoritesSchema = new mongoose.Schema({
         required: true
     },
     location: {
-        type: String,
+        type: {
+            lat: { type: Number, required: true },
+            lng: { type: Number, required: true }
+        },
         required: true
     },
     description: {
@@ -29,6 +32,9 @@ const favoritesSchema = new mongoose.Schema({
     },
     imageUrl: {
         type: String
+    },
+    weatherSuggestion: {
+        type: String  
     },
     addedAt: {
         type: Date,

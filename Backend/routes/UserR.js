@@ -25,4 +25,4 @@ router.post('/logout', authMiddleware, userController.logoutUser);
 
 router.put('/updateP', authMiddleware, userController.updateUser);
 
-module.exports = router;
+module.exports = router;   
