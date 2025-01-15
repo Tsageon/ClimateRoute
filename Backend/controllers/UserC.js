@@ -294,7 +294,15 @@ exports.search = async (req, res) => {
 
         res.status(200).json({
             weather: weatherData,
-            attractions,
+            attractions: attractions.map(attraction => ({
+                name: attraction.name,
+                location: {
+                    lat: attraction.geometry.location.lat,
+                    lng: attraction.geometry.location.lng,
+                },
+                address: attraction.vicinity,
+                types: attraction.types,
+            })),
             suggestions,
         });
     } catch (error) {
