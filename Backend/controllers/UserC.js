@@ -268,8 +268,15 @@ exports.search = async (req, res) => {
                 key: GOOGLE_PLACES_API_KEY,
             },
         });
-
-        const attractions = attractionsResponse.data.results;
+         
+        console.log("Google Places API Request Params:", {
+            location: `${lat},${lon}`,
+            radius,
+            type: 'tourist_attraction',
+            key: GOOGLE_PLACES_API_KEY ? "API Key Present" : "No API Key",
+        });
+        
+        const attractions = attractionsResponse.data.results || [];
 
         const suggestions = [];
         const mainWeather = weather[0]?.main.toLowerCase();
@@ -280,15 +287,13 @@ exports.search = async (req, res) => {
             suggestions.push('Perfect day for outdoor activities like visiting parks or gardens.');
         } else if (mainWeather.includes('clouds')) {
             suggestions.push('Great time for exploring landmarks or casual sightseeing.');
-        } 
-          else if (mainWeather.includes('snow')) {
+        } else if (mainWeather.includes('snow')) {
             suggestions.push('Snowy weather? Try winter sports or cozy indoor activities like cafes and theaters.');
         } else if (mainWeather.includes('wind')) {
             suggestions.push('Windy? Perfect for exploring nature trails, hiking, or visiting windmills.'); 
         } else if (mainWeather.includes('fog')) {
             suggestions.push('Foggy weather? A great time to visit mystical, atmospheric spots like historical sites.');
-        }
-          else {
+        } else {
             suggestions.push('Explore local attractions and adapt to the weather or just chill inside.');
         }
 
@@ -306,7 +311,13 @@ exports.search = async (req, res) => {
             suggestions,
         });
     } catch (error) {
-        console.error(error.message);
+        console.error("Error during API calls:", error.response?.data || error.message);
+        if (error.response && error.response.status === 400) {
+            return res.status(400).json({
+                message: 'Bad Request: Issue with the request to the API.',
+                details: error.response.data, 
+            });
+        }
         if (error.response && error.response.status === 404) {
             return res.status(404).json({ message: 'City not found' });
         }
@@ -400,4 +411,4 @@ exports.addToFavorites = [ authMiddleware, async (req, res) => {
         console.error(error.message);
         res.status(500).json({ message: 'Something went wrong while adding to favorites' });
     }
-}];
+}]; 
