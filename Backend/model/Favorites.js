@@ -8,13 +8,13 @@ const favoritesSchema = new mongoose.Schema({
     },
     itemType: {
         type: String,
-        enum: ['attraction', 'restaurant'],
+        enum: ['attraction', 'restaurant','point'],
         required: true
     },
     itemId: {
         type: mongoose.Schema.Types.ObjectId,
         refPath: 'itemType',
-        required: true
+        required: false
     },
     name: {
         type: String,

@@ -1,5 +1,6 @@
 const User = require('../model/User');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const authMiddleware = require('../middlewares/AuthM');
 const Favorite = require('../model/Favorites');
@@ -11,6 +12,10 @@ const WEATHER_BASE_URL = process.env.WEATHER_URL;
 const FORECAST_BASE_URL = process.env.FORECAST_URL;
 const GOOGLE_PLACES_BASE_URL = process.env.GOOGLE_PLACE_URL;
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_P_API_KEY;
+
+const generateItemId = (name, location) => {
+    return crypto.createHash('sha256').update(name + location).digest('hex');
+};
 
 console.log(process.env.WEATHER_URL); 
 console.log(process.env.FORECAST_URL);
@@ -186,7 +191,7 @@ exports.getUser = async (req, res) => {
         const favorites = await Favorite.find({ userId }).populate('itemId'); 
 
         const favoritesWithNameAsId = favorites.map(favorite => ({
-            id: favorite.itemId.name,  
+            itemId: favorite.itemId, 
             name: favorite.itemId.name,
             location: favorite.itemId.location,
             description: favorite.itemId.description,
@@ -414,33 +419,35 @@ exports.forecast5days = async (req, res) => {
     }
 };
 
-exports.addToFavorites = [ authMiddleware, async (req, res) => {
+exports.addToFavorites = [authMiddleware, async (req, res) => {
     const userId = req.userId;
-    const { itemType, itemId, name, location, description, imageUrl, weatherSuggestion } = req.body;
+    const { itemType, name, location, description, imageUrl, weatherSuggestion } = req.body;
 
-    if (!itemType || !itemId || !name || !location) {
+    if (!itemType || !name || !location) {
         return res.status(400).json({ message: 'Item details are required' });
     }
 
     try {
+        const itemId = crypto.createHash('sha256')
+                             .update(name + location)
+                             .digest('hex');
+
         const newFavorite = new Favorite({
             userId,
             itemType,
-            itemId,
+            itemId,  
             name,
-            location,   
+            location,
             description,
             imageUrl,
-            weatherSuggestion 
+            weatherSuggestion
         });
 
         await newFavorite.save();
 
         res.status(200).json({ message: 'Favorite added successfully' });
     } catch (error) {
-        console.error(error.message);
+        console.error('Error:', error);
         res.status(500).json({ message: 'Something went wrong while adding to favorites' });
     }
 }];
-
-
