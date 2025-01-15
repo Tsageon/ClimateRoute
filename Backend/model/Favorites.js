@@ -8,7 +8,8 @@ const favoritesSchema = new mongoose.Schema({
     },
     itemType: {
         type: String,
-        enum: ['attraction', 'restaurant','point'],
+        enum: ['attraction', 'restaurant', 'tourist_attraction',
+            'point_of_interest', 'establishment'],
         required: true
     },
     itemId: {
