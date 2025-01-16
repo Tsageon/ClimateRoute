@@ -76,12 +76,13 @@ exports.loginUser = async (req, res) => {
             process.env.JWT_SECRET,
             { expiresIn: '24h' }
         );
+        console.log('Password match successful for email:', email);
 
         res.status(200).json({
             message: 'Login successful',
             token
         });
-        console.log(user.email, user.password)
+        console.log('Login response sent successfully for email:', email, password);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Something went wrong while logging in user' });
