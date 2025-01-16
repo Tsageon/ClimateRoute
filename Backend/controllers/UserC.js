@@ -188,22 +188,13 @@ exports.getUser = async (req, res) => {
             return res.status(404).json({ message: 'User does not exist' });
         }
 
-        const itemId = crypto.createHash('sha256').update(`${name}${JSON.stringify(location)}`).digest('hex');
-
-        const favoritesWithNameAsId = favorites.map(favorite => ({
-            itemId: favorite.itemId, 
-            name: favorite.itemId.name,
-            location: favorite.itemId.location,
-            description: favorite.itemId.description,
-            imageUrl: favorite.itemId.imageUrl,
-            weatherSuggestion: favorite.weatherSuggestion
-        }));
+        const favorites = await Favorite.find({ userId });
 
         res.status(200).json({
             email: user.email,
             username: user.username,
             createdAt: user.createdAt,
-            favorites: favoritesWithNameAsId
+            favorites
         });
     } catch (error) {
         console.error(error.message);
@@ -328,6 +319,26 @@ exports.search = async (req, res) => {
             suggestions.push('Windy? Perfect for exploring nature trails, hiking, or visiting windmills.');
         } else if (mainWeather.includes('fog')) {
             suggestions.push('Foggy weather? A great time to visit mystical, atmospheric spots like historical sites.');
+        }  if (mainWeather.includes('thunderstorm')) {
+            suggestions.push('Thunderstorms? Stay safe indoors and enjoy cozy activities like reading, board games, or a spa day.');
+        } else if (mainWeather.includes('drizzle')) {
+            suggestions.push('A light drizzle can be refreshing—consider a walk with a good umbrella or explore a charming café.');
+        } else if (mainWeather.includes('hot')) {
+            suggestions.push('Hot weather? Head to a beach, water park, or enjoy ice-cold treats in air-conditioned spaces.');
+        } else if (mainWeather.includes('cold')) {
+            suggestions.push('Cold weather is perfect for bundling up and exploring indoor markets, libraries, or hot springs.');
+        } else if (mainWeather.includes('humid')) {
+            suggestions.push('Humid weather? Stay cool with a visit to air-conditioned museums, malls, or aquariums.');
+        } else if (mainWeather.includes('haze')) {
+            suggestions.push('Hazy day? Opt for indoor experiences like planetariums, escape rooms, or wellness centers.');
+        } else if (mainWeather.includes('storm')) {
+            suggestions.push('Stormy weather? Stay indoors and try activities like DIY crafts, cooking, or binge-watching shows.');
+        } else if (mainWeather.includes('heatwave')) {
+            suggestions.push('During a heatwave, visit water attractions or relax in shady, air-conditioned environments.');
+        } else if (mainWeather.includes('freezing')) {
+            suggestions.push('Freezing conditions? Perfect for staying cozy indoors or indulging in warm drinks and hearty meals.');
+        } else if (mainWeather.includes('blizzard')) {
+            suggestions.push('Blizzard? Stay warm and safe inside, and enjoy activities like baking, puzzles, or online gaming.');
         } else {
             suggestions.push('Explore local attractions and adapt to the weather or just chill inside.');
         }
@@ -428,9 +439,7 @@ exports.addToFavorites = [authMiddleware, async (req, res) => {
     }
 
     try {
-        const itemId = crypto.createHash('sha256')
-                             .update(name + location)
-                             .digest('hex');
+        const itemId = crypto.createHash('sha256').update(`${name}${JSON.stringify(location)}`).digest('hex');
 
         const newFavorite = new Favorite({
             userId,
