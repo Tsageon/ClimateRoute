@@ -9,6 +9,8 @@ router.get('/search', userController.search);
 
 router.get('/forecast', userController.forecast);
 
+router.get('/reset/:token', getResetPasswordForm);
+
 router.get('/fivedayforecast', userController.forecast5days);
 
 router.post('/addFavorite', authMiddleware, userController.addToFavorites);

@@ -115,6 +115,35 @@ exports.logoutUser = (req, res) => {
     }
 };
 
+exports.getResetPasswordForm = async (req, res) => {
+    const { token } = req.params;
+
+    try {
+        const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+        
+        const user = await User.findOne({
+            resetPasswordToken: hashedToken,
+            resetPasswordExpires: { $gt: Date.now() },
+        });
+
+        if (!user) {
+            return res.status(400).json({ message: 'Invalid or expired reset token' });
+        }
+
+        res.send(`
+            <form action="/reset-password/${token}" method="POST">
+              <label for="password">New Password:</label>
+              <input type="password" name="password" required />
+              <button type="submit">Reset Password</button>
+            </form>
+        `);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Something went wrong while displaying the form' });
+    }
+};
+
+
 exports.resetPassword = async (req, res) => {
     const { token } = req.params;
     const { password } = req.body;
@@ -129,7 +158,7 @@ exports.resetPassword = async (req, res) => {
         if (!user) {
             return res.status(400).json({ message: 'Invalid or expired reset token' });
         }
-
+      
         const saltRounds = 10;
         user.password = await bcrypt.hash(password, saltRounds);
 
