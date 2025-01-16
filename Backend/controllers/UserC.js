@@ -1,6 +1,7 @@
 const User = require('../model/User');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const transporter = require('./EmailC');
 const jwt = require('jsonwebtoken');
 const authMiddleware = require('../middlewares/AuthM');
 const Favorite = require('../model/Favorites');
@@ -13,9 +14,6 @@ const FORECAST_BASE_URL = process.env.FORECAST_URL;
 const GOOGLE_PLACES_BASE_URL = process.env.GOOGLE_PLACE_URL;
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_P_API_KEY;
 
-const generateItemId = (name, location) => {
-    return crypto.createHash('sha256').update(name + location).digest('hex');
-};
 
 console.log(process.env.WEATHER_URL); 
 console.log(process.env.FORECAST_URL);
@@ -77,12 +75,13 @@ exports.loginUser = async (req, res) => {
             { expiresIn: '24h' }
         );
         console.log('Password match successful for email:', email);
+        console.log('Token received for verification:', req.headers.authorization);
 
         res.status(200).json({
             message: 'Login successful',
             token
         });
-        console.log('Login response sent successfully for email:', email, password);
+        console.log('Login response sent successfully for email:', email);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Something went wrong while logging in user' });
@@ -94,16 +93,19 @@ exports.logoutUser = (req, res) => {
         const token = req.headers['authorization']?.split(' ')[1];
 
         if (!token) {
-            return res.status(400).json({ message: 'No token provided' });
+            console.warn('Logout request received without a token');
+            return res.status(200).json({ message: 'Logout successful (no token provided)' });
         }
 
-        jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+       jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
             if (err) {
-                return res.status(401).json({ message: 'Invalid token' });
+                console.error('Invalid token during logout:', err.message);
+                return res.status(200).json({ message: 'Logout successful (token invalid or expired)' });
             }
 
             const userId = decoded.userId;
-            console.log(`User with ID: ${userId} logged out`);
+            console.log(`User :${userId} with ID: ${decoded.userId} logged out`);
+            console.log('Token received for verification:', req.headers.authorization);
 
             res.status(200).json({ message: 'Logout successful' });
         });
