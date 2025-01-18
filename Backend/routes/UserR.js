@@ -9,7 +9,7 @@ router.get('/search', userController.search);
 
 router.get('/forecast', userController.forecast);
 
-router.get('/reset/:token', getResetPasswordForm);
+router.get('/reset/:token', userController.ResetPasswordForm);
 
 router.get('/fivedayforecast', userController.forecast5days);
 

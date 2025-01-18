@@ -115,7 +115,7 @@ exports.logoutUser = (req, res) => {
     }
 };
 
-exports.getResetPasswordForm = async (req, res) => {
+exports.ResetPasswordForm = async (req, res) => {
     const { token } = req.params;
 
     try {
